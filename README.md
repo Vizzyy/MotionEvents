@@ -1,5 +1,3 @@
-# MotionEvents
-
 ## Usage: 
 > ./emailEvents 01/31/1993-00:00:00 
 

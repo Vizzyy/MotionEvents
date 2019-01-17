@@ -1,6 +1,7 @@
 # MotionEvents
 
-./emailEvents <EVENT TIMESTAMP> 
+## Usage: 
+> ./emailEvents 01/31/1993-00:00:00 
 
 Script can be run by MOTION stream software, on the event_end. 
 

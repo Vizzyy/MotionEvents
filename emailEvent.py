@@ -19,7 +19,7 @@ with open('/home/pi/listOfImages.txt', 'r') as f:
 newLine = "\n"
 totalLog = ""
 print(str(len(fullList)) + " file(s) in list.")
-total = totalLog + str(len(fullList)) + " file(s) in list."+newLine
+totalLog = totalLog + str(len(fullList)) + " file(s) in list."+newLine
 
 def split(arr, size):
 	arrs = []
@@ -72,8 +72,8 @@ for chunk in chunks:
 				cursor = db.cursor()
 				cursor.execute(sql, args)
 
-				print("Finished attaching image and inserting blob: " + line)
-				totalLog = totalLog + "Finished attaching image and inserting blob: " + line + newLine
+				#print("Finished attaching image and inserting blob: " + line)
+				#totalLog = totalLog + "Finished attaching image and inserting blob: " + line + newLine
 				counter = counter + 1
 			except Exception as e:
 				print("Exception with file: " + line)

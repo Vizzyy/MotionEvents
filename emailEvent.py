@@ -94,7 +94,7 @@ except Exception as e:
 	print("Could not send log: ")
 	print(str(e))
 
-f = open('listOfImages.txt', 'w')  # erase contents
+f = open(scriptDir+'listOfImages.txt', 'w')  # erase contents
 f.close()
 os.remove(scriptDir+"outputName.gif")
 print(str(datetime.datetime.now())+" -- Clearing list.")

@@ -5,127 +5,98 @@ from email.mime.base import MIMEBase
 from email import encoders
 import mysql.connector
 import sys
-from PIL import Image
 import os
-sys.path.append(os.path.abspath("/home/pi/properties.py"))
+import datetime
+import glob
+sys.path.append(os.path.abspath("properties.py"))
 from properties import *
 
-chunkSize = 100
 body = sys.argv[1]
-
-with open('/home/pi/listOfImages.txt', 'r') as f:
-	fullList = f.read().splitlines()
-
+scriptDir = '/home/pi/'
+gif_name = 'outputName.gif'
 newLine = "\n"
 totalLog = ""
-print(str(len(fullList)) + " file(s) in list.")
-totalLog = totalLog + str(len(fullList)) + " file(s) in list."+newLine
-
-def split(arr, size):
-	arrs = []
-	while len(arr) > size:
-		pice = arr[:size]
-		arrs.append(pice)
-		arr = arr[size:]
-	arrs.append(arr)
-	return arrs
-
-chunks = split(fullList, chunkSize)
-print("Given chunk size of: " + str(chunkSize) + ", there is/are " + str(len(chunks)) + " chunk(s).")
-totalLog = totalLog + "Given chunk size of: " + str(chunkSize) + ", there is/are " + str(len(chunks)) + " chunk(s)." + newLine
+msg = MIMEMultipart()
+msg.attach(MIMEText("DB Primary Key: "+body+newLine+newLine, 'plain'))
+msg['From'] = getAddr()
+msg['To'] = getAddr()
+msg['Subject'] = "Motion Triggered"
 
 db = mysql.connector.connect(user='motion', password=getDbPass(), host='dinkleberg', database='motion')
+cursor = db.cursor()
 
 server = smtplib.SMTP('smtp.gmail.com', 587)
 server.starttls()
 server.login(getAddr(), getEmailPass())
 
-chunkCounter = 1
-for chunk in chunks:
-	counter = 0
-	msg = MIMEMultipart()
-	msg.attach(MIMEText(body, 'plain'))
-	msg['From'] = getAddr()
-	msg['To'] = getAddr()
-	msg['Subject'] = "Motion Triggered"
+fullList = glob.glob(scriptDir+'*.jpg') # Get all the jpg in the directory
+list.sort(fullList, key=lambda x: int(x.split('-')[1].split('.jpg')[0])) # 20190122-21162100.jpg -> 21162100 -- this is comparable
+print(fullList)
 
-	try:
-		for line in chunk:  # Parse through list of images and attach them to email and Insert to DB
-			try:
-				# Open image
-				filename = 'frame' + str(counter) + '.jpg'
-				attachment = open(line, "rb")  # line is absolute path to file
+with open(scriptDir+'listOfImages.txt', 'w') as file:
+	for item in fullList:
+		file.write("%s\n" % item)
 
-				# Attach image to email
-				part = MIMEBase('application', 'octet-stream')
-				part.set_payload(attachment.read())
-				encoders.encode_base64(part)
-				part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-				msg.attach(part)
+print(str(datetime.datetime.now()) + " -- " + str(len(fullList)) + " file(s) in list. ")
+totalLog = totalLog + str(datetime.datetime.now()) + " -- " + str(len(fullList)) + " file(s) in list. " + newLine
 
-				# Also insert into DB
-				imagePath = line
-				image = Image.open(imagePath)
-				blob_value = open(imagePath, 'rb').read()
-				sql = 'INSERT INTO images(Time, Image) VALUES(%s, %s)'
-				args = (imagePath[-19:], blob_value)
-				cursor = db.cursor()
-				cursor.execute(sql, args)
+if len(fullList) == 0: # Stop emailing me on restart
+	raise SystemExit() # Graceful exit
 
-				#print("Finished attaching image and inserting blob: " + line)
-				#totalLog = totalLog + "Finished attaching image and inserting blob: " + line + newLine
-				counter = counter + 1
-			except Exception as e:
-				print("Exception with file: " + line)
-				print(str(e))
-				totalLog = totalLog + "Exception with file: " + line + newLine + str(e) + newLine
+filepath = scriptDir+gif_name
+try:
+	print(str(datetime.datetime.now()) + " -- " + "Converting event into GIF format... ")
+	totalLog = totalLog + str(datetime.datetime.now()) + " -- Converting event into GIF format... " + newLine
+	os.system('convert @{}listOfImages.txt {}{}'.format(scriptDir, scriptDir, gif_name))
+	print(str(datetime.datetime.now()) + " -- " + "Success! Converted event into GIF format. ")
+	totalLog = totalLog + str(datetime.datetime.now()) + " -- Success! Converted event into GIF format. " + newLine
 
-		if counter > 0:  # If we have photos accumulated, email them
-			text = msg.as_string()
-			print("Attempting to send Email size: "+str(len(text))+" -- " + str(chunkCounter) + "/" + str(len(chunks)))
-			totalLog = totalLog + "Attempting to send Email size: "+str(len(text))+" -- " + str(chunkCounter) + "/" + str(len(chunks)) + newLine
-			server.sendmail(getAddr(), getAddr(), text)
-			print("		SUCCESS")
-			totalLog = totalLog + "		SUCCESS" + newLine
-			db.commit() # Commit to DB when email is sent
+	# Open image
+	attachment = open(filepath, "rb")  # line is absolute path to file
 
-	except Exception as e:
-		print("Failed to process chunk #: " + str(chunkCounter))
-		print(str(e))
-		totalLog = totalLog + "Failed to process chunk #: " + str(chunkCounter) + newLine + str(e) + newLine
-		db.rollback() # Roll back if exception, so that we don't end up with duplicates
+	# Attach image to email
+	part = MIMEBase('application', 'octet-stream')
+	part.set_payload(attachment.read())
+	encoders.encode_base64(part)
+	part.add_header('Content-Disposition', "attachment; filename= %s" % gif_name)
+	msg.attach(part)
 
-	chunkCounter = chunkCounter + 1
+	# Also insert into DB
+	blob_value = blob_value = open(filepath, 'rb').read()
+	sql = 'INSERT INTO images(Time, Image) VALUES(%s, %s)'
+	args = (body, blob_value)
+	cursor.execute(sql, args)
+	db.commit()
+	print(str(datetime.datetime.now()) + " -- " + "Commited Gif to Database. ")
+	totalLog = totalLog + str(datetime.datetime.now()) + " -- Commited Gif to Database. " + newLine
+except Exception as e:
+	print(str(e))
+	totalLog = totalLog + str(e) + newLine
+	totalLog = totalLog + str(datetime.datetime.now()) + " -- Emailing event Failure... "
+	msg.attach(MIMEText(totalLog, 'plain'))
+	server.sendmail(getAddr(), getAddr(), msg.as_string())
+	raise SystemExit()
 
-deleteCounter = 0
 for line in fullList:
 	try:
 		os.remove(line)
-		deleteCounter = deleteCounter + 1
-		print("Removed file #" + str(deleteCounter) + ": " + line)
-		totalLog = totalLog + "Removed file #" + str(deleteCounter) + ": " + line + newLine
 	except Exception as e:
 		print("Could not remove file: " + line)
 		print(str(e))
 		totalLog = totalLog + "Could not remove file: " + line + newLine + str(e) + newLine
 
 try:
-	totalLog = totalLog + "Emailing log of event..."
-	# One last email for logs
-	msg = MIMEMultipart()
+	totalLog = totalLog + str(datetime.datetime.now()) + " -- Emailing log of event... "
 	msg.attach(MIMEText(totalLog, 'plain'))
-	msg['From'] = getAddr()
-	msg['To'] = getAddr()
-	msg['Subject'] = "Email Event Log"
 	server.sendmail(getAddr(), getAddr(), msg.as_string())
-	print("Email log success!")
+	print(str(datetime.datetime.now()) + " -- " + "Email log success!")
 except Exception as e:
 	print("Could not send log: ")
 	print(str(e))
 
-f = open('/home/pi/listOfImages.txt', 'w')  # erase contents last
-print("Clearing list.")
+f = open('listOfImages.txt', 'w')  # erase contents
 f.close()
+os.remove(scriptDir+"outputName.gif")
+print(str(datetime.datetime.now())+" -- Clearing list.")
 server.quit()
-db.close()
-print("Cleanup Complete.")
+print(str(datetime.datetime.now())+" -- Cleanup Complete.")

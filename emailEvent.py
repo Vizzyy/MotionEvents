@@ -31,6 +31,7 @@ server.login(getAddr(), getEmailPass())
 
 fullList = glob.glob(scriptDir+'*.jpg') # Get all the jpg in the directory
 list.sort(fullList, key=lambda x: int(x.split('-')[1].split('.jpg')[0])) # 20190122-21162100.jpg -> 21162100 -- this is comparable
+																		 # 21:16:21-00 <- this 00 is the frame # if mult. per second
 print(fullList)
 
 with open(scriptDir+'listOfImages.txt', 'w') as file:
@@ -94,9 +95,10 @@ except Exception as e:
 	print("Could not send log: ")
 	print(str(e))
 
-f = open('listOfImages.txt', 'w')  # erase contents
+f = open(scriptDir+'listOfImages.txt', 'w')  # erase contents
 f.close()
 os.remove(scriptDir+"outputName.gif")
+os.system('sudo rm /tmp/magic*') # Bug in ImageMagick?? tmp fills up beyond limited Pi memory
 print(str(datetime.datetime.now())+" -- Clearing list.")
 server.quit()
 print(str(datetime.datetime.now())+" -- Cleanup Complete.")

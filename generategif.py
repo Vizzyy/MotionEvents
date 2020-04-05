@@ -11,9 +11,9 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-from properties import getAddr, getEmailPass, getDbPass
+from properties import getAddr, getEmailPass, getDbPass, getLogDir, getDbHost
 
-scriptDir = '/home/barney/photos/'
+scriptDir = getLogDir()
 # create logger with 'spam_application'
 logger = logging.getLogger('output')
 logger.setLevel(logging.DEBUG)
@@ -34,7 +34,7 @@ while True:
                 server = smtplib.SMTP('smtp.gmail.com', 587)
                 server.starttls()
                 server.login(getAddr(), getEmailPass())
-                db = mysql.connector.connect(user='motion', password=getDbPass(), host='dinkleberg', port=9004, database='motion')
+                db = mysql.connector.connect(user='motion', password=getDbPass(), host=getDbHost(), port=9004, database='motion')
                 cursor = db.cursor()
         except Exception as e:
                 try:

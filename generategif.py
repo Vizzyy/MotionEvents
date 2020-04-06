@@ -100,7 +100,7 @@ while True:
         try:
             gifList = glob.glob(scriptDir + '*.gif')
             print(gifList)
-            logger.info(print(gifList))
+            logger.info(gifList)
         except Exception as e:
             gifList = []
             logger.info('{}'.format(e))

@@ -10,23 +10,29 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-
+from systemd.journal import JournaldLogHandler
 from properties import getAddr, getEmailPass, getDbPass, getLogDir, getDbHost, getDepth, getSleepPeriod
 
 scriptDir = getLogDir()
 depth = getDepth()
 sleepPeriod = getSleepPeriod()
 # create logger with 'spam_application'
-logger = logging.getLogger('output')
+logger = logging.getLogger(__name__)
+journald_handler = JournaldLogHandler()
+
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler(scriptDir + 'output.log')
-fh.setLevel(logging.DEBUG)
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
+journald_handler.setFormatter(formatter)
+
 # add the handlers to the logger
 logger.addHandler(fh)
+logger.addHandler(journald_handler)
+logger.setLevel(logging.DEBUG)
+
 
 sys.path.append(os.path.abspath("properties.py"))
 print("\n\nStarting up program...")

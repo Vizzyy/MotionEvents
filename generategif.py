@@ -91,7 +91,7 @@ while True:
             # convert -loop 0 -layers optimize -resize 400 *.jpg output2.gif
             logger.info('   Generating gif: {}'.format(gifName))
             print('Generating gif: {}'.format(gifName))
-            os.system('convert -loop 0 -layers optimize -resize 400 {}event{}/*.jpg {}'.format(scriptDir, event, gifName))
+            os.system('convert -loop 0 -layers optimize -resize 400 {}event{}/*.jpg {}{}'.format(scriptDir, event, scriptDir, gifName))
             logger.info('   Gif complete.')
             print('Gif complete.')
             os.system('rm -R {}event{}'.format(scriptDir, event))
@@ -99,6 +99,8 @@ while True:
             print('Removed temp directory.')
         try:
             gifList = glob.glob(scriptDir + '*.gif')
+            print(gifList)
+            logger.info(print(gifList))
         except Exception as e:
             gifList = []
             logger.info('{}'.format(e))
@@ -141,6 +143,6 @@ while True:
                 gifCounter = gifCounter + 1
 
     # logger.info('Sleeping for five minutes...')
-    print('Sleeping for five minutes...')
+    print('Sleeping for {} minutes...'.format(sleepPeriod))
     server.quit()
     time.sleep(sleepPeriod * 60)  # sleep five minutes

@@ -17,7 +17,7 @@ scriptDir = getLogDir()
 depth = getDepth()
 sleepPeriod = getSleepPeriod()
 # create logger with 'spam_application'
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('Photos')
 journald_handler = JournaldLogHandler()
 
 logger.setLevel(logging.DEBUG)

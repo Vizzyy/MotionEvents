@@ -11,9 +11,11 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-from properties import getAddr, getEmailPass, getDbPass, getLogDir, getDbHost
+from properties import getAddr, getEmailPass, getDbPass, getLogDir, getDbHost, getDepth, getSleepPeriod
 
 scriptDir = getLogDir()
+depth = getDepth()
+sleepPeriod = getSleepPeriod()
 # create logger with 'spam_application'
 logger = logging.getLogger('output')
 logger.setLevel(logging.DEBUG)
@@ -51,6 +53,7 @@ while True:
 
     if (len(fullList)) > 0:
         logger.info('There are {} images to parse.'.format(len(fullList)))
+        print('There are {} images to parse.'.format(len(fullList)))
         list.sort(fullList, key=lambda x: int(x.split('-')[2].split('.jpg')[0]))
         # 20190122-21162100.jpg -> 21162100 -- this is comparable
         # 21:16:21-00 <- this 00 is the frame # if mult. per second
@@ -62,9 +65,10 @@ while True:
         firstEvent = True
 
         logger.info('Sorting images by event...')
+        print('Sorting images by event...')
         # Calculate # of events
         for line in fullList:
-            eventNumber = int(line.split('/')[4].split('-')[0])  # isolate just the first 2 digits of filename
+            eventNumber = int(line.split('/')[depth].split('-')[0])  # isolate just the first 2 digits of filename
 
             if previousEvent != eventNumber:
                 previousEvent = eventNumber
@@ -77,6 +81,7 @@ while True:
 
         for event in range(eventCount):  # iterate through events, event = integer
             logger.info('Creating directory: event{}'.format(event))
+            print('Creating directory: event{}'.format(event))
             os.system('mkdir {}event{}'.format(scriptDir, event))  # make a temp directory for each event
 
             for file in events[event]:  # move files into appropriate directory - file = absolute path to file
@@ -85,12 +90,13 @@ while True:
             gifName = 'event{}.gif'.format(event)
             # convert -loop 0 -layers optimize -resize 400 *.jpg output2.gif
             logger.info('   Generating gif: {}'.format(gifName))
-            os.system(
-                'convert -loop 0 -layers optimize -resize 400 {}event{}/*.jpg {}'.format(scriptDir, event, gifName))
+            print('Generating gif: {}'.format(gifName))
+            os.system('convert -loop 0 -layers optimize -resize 400 {}event{}/*.jpg {}'.format(scriptDir, event, gifName))
             logger.info('   Gif complete.')
+            print('Gif complete.')
             os.system('rm -R {}event{}'.format(scriptDir, event))
             logger.info('   Removed temp directory.')
-
+            print('Removed temp directory.')
         try:
             gifList = glob.glob(scriptDir + '*.gif')
         except Exception as e:
@@ -100,6 +106,7 @@ while True:
         if len(gifList) > 0:
             timeStamp = str(datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"))
             logger.info('Result directory: event{}'.format(timeStamp))
+            print('Result directory: event{}'.format(timeStamp))
             os.system('mkdir {}event{}'.format(scriptDir, timeStamp))  # make a directory for this cycle
             gifCounter = 0
             for file in gifList:
@@ -113,19 +120,20 @@ while True:
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload(attachment.read())
                 encoders.encode_base64(part)
-                part.add_header('Content-Disposition',
-                                "attachment; filename= %s" % str('event' + str(gifCounter) + '.gif'))
+                part.add_header('Content-Disposition', "attachment; filename= %s" % str('event' + str(gifCounter) + '.gif'))
                 msg.attach(part)
                 try:
                     server.sendmail(getAddr(), getAddr(),
                                     msg.as_string())  # Send mail -- Can be too large so must catch exception
                     logger.info('Successfully emailed event #{}.'.format(str(gifCounter)))
+                    print('Successfully emailed event #{}.'.format(str(gifCounter)))
                     blob_value = open(file, 'rb').read()
                     sql = 'INSERT INTO images(Time, Image) VALUES(%s, %s)'
-                    args = (str(timeStamp + '-' + file.split('/')[4].split('.gif')[0]), blob_value)
+                    args = (str(timeStamp + '-' + file.split('/')[depth].split('.gif')[0]), blob_value)
                     cursor.execute(sql, args)
                     db.commit()
                     logger.info('Successfully inserted event #{} into database.'.format(str(gifCounter)))
+                    print('Successfully inserted event #{} into database.'.format(str(gifCounter)))
                 except Exception as e:
                     logger.info('{}'.format(e))
 
@@ -133,5 +141,6 @@ while True:
                 gifCounter = gifCounter + 1
 
     # logger.info('Sleeping for five minutes...')
+    print('Sleeping for five minutes...')
     server.quit()
-    time.sleep(5 * 60)  # sleep five minutes
+    time.sleep(sleepPeriod * 60)  # sleep five minutes

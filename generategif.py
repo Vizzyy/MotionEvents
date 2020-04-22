@@ -10,7 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from systemd.journal import JournaldLogHandler
+from systemd import journal
 from properties import getAddr, getEmailPass, getDbPass, getLogDir, getDbHost, getDepth, getSleepPeriod
 
 scriptDir = getLogDir()
@@ -18,7 +18,7 @@ depth = getDepth()
 sleepPeriod = getSleepPeriod()
 # create logger with 'spam_application'
 logger = logging.getLogger('Photos')
-journald_handler = JournaldLogHandler()
+journald_handler = journal.JournalHandler()
 
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages

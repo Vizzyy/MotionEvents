@@ -42,7 +42,7 @@ while True:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(getAddr(), getEmailPass())
-        db = mysql.connector.connect(user='motion', password=getDbPass(), host=getDbHost(), port=3306,
+        db = mysql.connector.connect(user='motion', password=getDbPass(), host=getDbHost(), port=9004,
                                      database='motion')
         cursor = db.cursor()
     except Exception as e:

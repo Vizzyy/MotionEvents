@@ -46,9 +46,9 @@ print("\n\nStarting up program...")
 logger.info("\n\nStarting up program...")
 while True:
     try:
-	db = mysql.connector.connect(**ssl_config)
+        db = mysql.connector.connect(**ssl_config)
         cursor = db.cursor()
-	print("connected to resources")
+        print("connected to resources")
     except Exception as e:
         logger.info(f'{e}')
         time.sleep(5)

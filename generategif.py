@@ -6,16 +6,16 @@ import sys
 import time
 
 import mysql.connector
-from systemd import journal
-
 from properties import getDbPass, getLogDir, getDbHost, getDepth, getSleepPeriod
+from mysql.connector.constants import ClientFlag
+from systemd.journal import JournaldLogHandler
 
 scriptDir = getLogDir()
 depth = getDepth()
 sleepPeriod = getSleepPeriod()
 # create logger with 'spam_application'
 logger = logging.getLogger('Photos')
-journald_handler = journal.JournalHandler()
+journald_handler = JournaldLogHandler()
 
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
@@ -30,15 +30,25 @@ logger.addHandler(fh)
 logger.addHandler(journald_handler)
 logger.setLevel(logging.DEBUG)
 
-
 sys.path.append(os.path.abspath("properties.py"))
+
+ssl_config = {
+    'user': 'motion',
+    'password': getDbPass(),
+    'host': getDbHost(),
+    'port': 9004,
+    'database': 'motion',
+    'client_flags': [ClientFlag.SSL],
+    'ssl_ca': '/etc/mysql/ssl/ca.pem',
+}
+
 print("\n\nStarting up program...")
 logger.info("\n\nStarting up program...")
 while True:
     try:
-        db = mysql.connector.connect(user='motion', password=getDbPass(), host=getDbHost(), port=9004,
-                                     database='motion')
+	db = mysql.connector.connect(**ssl_config)
         cursor = db.cursor()
+	print("connected to resources")
     except Exception as e:
         logger.info(f'{e}')
         time.sleep(5)

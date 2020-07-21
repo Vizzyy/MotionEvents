@@ -40,6 +40,7 @@ ssl_config = {
     'database': 'motion',
     'client_flags': [ClientFlag.SSL],
     'ssl_ca': '/etc/mysql/ssl/ca.pem',
+    'use_pure': True
 }
 
 print("\n\nStarting up program...")

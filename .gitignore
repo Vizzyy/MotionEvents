@@ -6,3 +6,4 @@ testImages/
 MotionEvents.iml
 *.jpg
 .DS_Store
+__pycache__/

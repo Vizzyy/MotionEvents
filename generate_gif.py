@@ -24,13 +24,13 @@ ssl_config = {
     'use_pure': True
 }
 
+print("Starting program...")
 
 while True:
     try:
         # Start with DB connection so that we don't attempt to process and risk manipulating/losing data
         db = mysql.connector.connect(**ssl_config)
         cursor = db.cursor()
-        print("DB connection secured, beginning processing...")
     except Exception as e:
         print(f'ERROR: Failed to connect to DB: {e}')
         time.sleep(5)
@@ -112,6 +112,6 @@ while True:
 
         db.close()
         cursor.close()
+        print(f'Sleeping for {sleep_minutes} minute(s)...')
 
-    print(f'Sleeping for {sleep_minutes} minute(s)...')
-    time.sleep(sleep_minutes * 60)  # sleep five minutes
+    time.sleep(sleep_minutes * 60)

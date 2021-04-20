@@ -7,8 +7,9 @@ import mysql.connector
 from properties import *
 from mysql.connector.constants import ClientFlag
 
-# In order set a soft limit on how large a gif can be, we limit the amount of frames that go into a gif.
-# The goal is to keep the gif size <= 10MB. This limit will need to be changed depending on frame size/quality.
+# In order to set a soft limit on how large a gif can be, we limit the amount of frames that go into a gif.
+# The goal is to keep the gif size <= 10MB.
+# The value of event_size_limit will need to be changed depending on individual frame size/quality.
 event_size_limit = 150
 sleep_minutes = 5
 if os.environ.get('DB_HOST'):
@@ -88,7 +89,8 @@ while True:
             gif_count = 0
             for gif in gif_list:
                 try:
-                    # original_datetime output example: 20190122-211621 (removed first 3, and last 2, digits)
+                    # Grab file_name of first image in event, signifying the actual start time of the recording
+                    # example original_datetime value: 20190122-211621 (after removing first 3, and last 2, digits)
                     original_datetime = events[gif_count][0].split('/')[-1].split('.')[0][3:-2]
                     formatted_original_datetime = datetime.datetime\
                         .strptime(original_datetime, '%Y%m%d-%H%M%S')\

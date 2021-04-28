@@ -3,15 +3,14 @@ import glob
 import os
 import shutil
 import time
+import boto3
 import mysql.connector
 from properties import *
 from mysql.connector.constants import ClientFlag
 
 # In order to set a soft limit on how large a gif can be, we limit the amount of frames that go into a gif.
-# The goal is to keep the gif size <= maximum allowed lambda payload size (6291556 bytes AFTER b64 encode)
-# The value of event_size_limit will need to be changed depending on individual frame size/quality.
 # 150 = 9.2MB ish, 100 = 6.1MB ish, etc, but encoding will add ~36% additional size w/ current parameters
-event_size_limit = 70
+event_size_limit = 200
 sleep_minutes = 5
 if os.environ.get('DB_HOST'):
     DB_HOST = os.environ.get('DB_HOST')
@@ -25,6 +24,7 @@ ssl_config = {
     'ssl_ca': SSL_PATH,
     'use_pure': True
 }
+s3_client = boto3.client('s3')
 
 print("Starting program...")
 
@@ -50,11 +50,17 @@ while True:
         events = [[]]
 
         print('Bundling events...')
+        event_num = int(full_list[0][0:2])
         for file_path in full_list:
-            if len(events[-1]) < event_size_limit:
+            # Check if the bundle is under limit, and the event number is still the same
+            # Regardless of the current count, separate events should always bundle separately
+            if len(events[-1]) < event_size_limit and int(file_path[0:2]) == event_num:
                 events[-1].append(file_path)
             else:
+                event_num = int(file_path[0:2])
                 events.append([file_path])
+
+        [print(f"{events.index(event)}: {len(event)}") for event in events]
 
         event_counter = 0
         for event in events:
@@ -87,31 +93,31 @@ while True:
             print(f'ERROR: Somehow no Gif created? {e}')
 
         if len(gif_list) > 0:
-            gif_count = 0
             for gif in gif_list:
                 try:
                     # Grab file_name of first image in event, signifying the actual start time of the recording
                     # example original_datetime value: 20190122-211621 (after removing first 3, and last 2, digits)
-                    original_datetime = events[gif_count][0].split('/')[-1].split('.')[0][3:-2]
+                    original_datetime = events[gif_list.index(gif)][0].split('/')[-1].split('.')[0][3:-2]
                     formatted_original_datetime = datetime.datetime\
                         .strptime(original_datetime, '%Y%m%d-%H%M%S')\
                         .strftime('%Y-%m-%d-%H:%M:%S')
+                    final_time = f"{str(formatted_original_datetime)}-event{gif_list.index(gif)}"
 
-                    # Insert blob into DB
+                    # Insert blob into DB, and push to S3 for off-site backup
                     blob_value = open(gif, 'rb').read()
                     sql = 'INSERT INTO images(Time, Image) VALUES(%s, %s)'
-                    args = (f"{str(formatted_original_datetime)}-event{gif_count}", blob_value)
+                    args = (final_time, blob_value)
                     cursor.execute(sql, args)
                     db.commit()
+                    s3_client.upload_file(gif, "vizzyy-motion-events", f"{final_time}.gif")
 
                     file_size = '%.2f' % float(os.path.getsize(gif) / 1000 / 1000)
-                    print(f'Successfully inserted event #{str(gif_count)} '
+                    print(f'Successfully inserted event #{str(gif_list.index(gif))} '
                           f'[{args[0]}, size: {file_size}MB] into database')
 
                     os.remove(gif)
                 except Exception as e:
                     print(f'ERROR: {e}')
-                gif_count = gif_count + 1
 
         db.close()
         cursor.close()

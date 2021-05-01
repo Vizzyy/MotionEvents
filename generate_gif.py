@@ -10,7 +10,7 @@ from mysql.connector.constants import ClientFlag
 
 # In order to set a soft limit on how large a gif can be, we limit the amount of frames that go into a gif.
 # 150 = 9.2MB ish, 100 = 6.1MB ish, etc, but encoding will add ~36% additional size w/ current parameters
-event_size_limit = 200
+event_size_limit = 1000
 sleep_minutes = 5
 if os.environ.get('DB_HOST'):
     DB_HOST = os.environ.get('DB_HOST')

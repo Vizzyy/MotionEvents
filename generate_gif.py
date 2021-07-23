@@ -127,7 +127,7 @@ while True:
 
                     os.remove(gif)
                 except Exception as e:
-                    print(f'ERROR: {e}')
+                    print(f'ERROR: {type(e).__name__} {e}')
 
         db.close()
         cursor.close()

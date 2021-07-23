@@ -97,7 +97,9 @@ while True:
                 try:
                     # Grab file_name of first image in event, signifying the actual start time of the recording
                     # example original_datetime value: 20190122-211621 (after removing first 3, and last 2, digits)
+                    print(events[gif_list.index(gif)])
                     original_datetime = events[gif_list.index(gif)][0].split('/')[-1].split('.')[0][3:-2]
+
                     formatted_original_datetime = datetime.datetime\
                         .strptime(original_datetime, '%Y%m%d-%H%M%S')\
                         .strftime('%Y-%m-%d-%H:%M:%S')

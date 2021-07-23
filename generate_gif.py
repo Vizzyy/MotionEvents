@@ -104,7 +104,7 @@ while True:
                     original_datetime = events[gif_list.index(gif)][0]  # Grab the first frame of the event
                     print(f"First frame of event: {original_datetime}")
                     original_datetime = original_datetime.split('.')[0]  # Strip whatever file extension
-                    original_datetime = original_datetime.split['-']  # split ['202', '20210723', '13374304']
+                    original_datetime = original_datetime.split('-')  # split ['202', '20210723', '13374304']
                     original_datetime = f"{original_datetime[-2]}-{original_datetime[-1]}"  # concat: 20210723-13374304
                     print(f"Parsed timeframe: {original_datetime}")
 

@@ -95,10 +95,18 @@ while True:
         if len(gif_list) > 0:
             for gif in gif_list:
                 try:
-                    # Grab file_name of first image in event, signifying the actual start time of the recording
-                    # example original_datetime value: 20190122-211621 (after removing first 3, and last 2, digits)
-                    print(events[gif_list.index(gif)])
-                    original_datetime = events[gif_list.index(gif)][0].split('/')[-1].split('.')[0][3:-2]
+                    # "events" is an array of arrays of frames pulled during motion event, it looks something like this:
+                    # [['202-20210723-13374304.jpg', '202-20210723-13374305.jpg', ... '202-20210723-13374919.jpg'],
+                    # ['203-20210723-13374304.jpg', '203-20210723-13374305.jpg', ... '203-20210723-13374919.jpg']]
+                    # The event number, 202 in the above example, is reset maybe on reboot of service, or system?
+                    # We grab the first frame of each event as our key for "original_datetime", this represents when
+                    # that event occurred.
+                    original_datetime = events[gif_list.index(gif)][0]  # Grab the first frame of the event
+                    print(f"First frame of event: {original_datetime}")
+                    original_datetime = original_datetime.split('.')[0]  # Strip whatever file extension
+                    original_datetime = original_datetime.split['-']  # split ['202', '20210723', '13374304']
+                    original_datetime = f"{original_datetime[-2]}-{original_datetime[-1]}"  # concat: 20210723-13374304
+                    print(f"Parsed timeframe: {original_datetime}")
 
                     formatted_original_datetime = datetime.datetime\
                         .strptime(original_datetime, '%Y%m%d-%H%M%S')\

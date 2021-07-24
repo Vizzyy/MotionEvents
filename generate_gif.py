@@ -101,6 +101,7 @@ while True:
                     # The event number, 202 in the above example, is reset maybe on reboot of service, or system?
                     # We grab the first frame of each event as our key for "original_datetime", this represents when
                     # that event occurred.
+                    print(events[gif_list.index(gif)])
                     original_datetime = events[gif_list.index(gif)][0]  # Grab the first frame of the event
                     print(f"First frame of event: {original_datetime}")
                     original_datetime = original_datetime.split('.')[0].split('-')  # Strip whatever file extension

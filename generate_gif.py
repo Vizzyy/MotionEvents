@@ -106,7 +106,7 @@ while True:
                     print(f"First frame of event: {original_datetime}")
                     original_datetime = original_datetime.split('.')[0].split('-')  # Strip whatever file extension
                     # original_datetime = original_datetime.split('-')  # split ['202', '20210723', '13374304']
-                    original_datetime = f"{original_datetime[-2]}-{original_datetime[-1]}"  # concat: 20210723-13374304
+                    original_datetime = f"{original_datetime[-2]}-{original_datetime[-1][:-2]}"  # concat: 20210723-133743
                     print(f"Parsed timeframe: {original_datetime}")
 
                     formatted_original_datetime = datetime.datetime\
